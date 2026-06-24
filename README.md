@@ -22,6 +22,7 @@ Le résultat est un environnement exploitable pour démonstrations, tests techni
 
 - [Architecture globale](#architecture-globale)
 - [État final](#état-final)
+- [Portail web du showroom](#portail-web-du-showroom)
 - [Nœuds Proxmox](#nœuds-proxmox)
 - [Stockage](#stockage)
 - [Chronologie détaillée](#chronologie-détaillée)
@@ -116,9 +117,53 @@ flowchart TB
 | Monitoring | VM `101 monitoring` active |
 | GLPI | VM `1301 vm-glpi`, HTTP validé |
 | Ansible | VM `1302 vm-ansible`, bootstrap terminé |
+| Portail web showroom | Hébergé sur `vm-ansible`, accessible via `http://192.168.3.112:8088/` |
 | Doublons | `1000`, `1003`, `1006`, `1100`, `1300` supprimés |
 | Terraform | 42 ressources, configuration valide, plan final sans changement |
 | Documentation | README final publié comme documentation principale |
+
+## Portail web du showroom
+
+Une interface web dédiée a été réalisée pour centraliser l'exploitation du lab/showroom.  
+Elle est hébergée directement dans l'environnement showroom sur la VM `vm-ansible` (`192.168.3.112`) avec un service `systemd` permanent.
+
+| Élément | Valeur |
+|---|---|
+| URL interne | `http://192.168.3.112:8088/` |
+| VM d'hébergement | `vm-ansible` |
+| Répertoire | `/opt/showroom-lab-portal` |
+| Service | `showroom-lab-portal.service` |
+| API live | `/api/health` |
+| API système | `/api/system` |
+
+Fonctions intégrées :
+
+- accès rapides vers Proxmox, TrueNAS, OPNsense, GLPI, Grafana, iLO, GitHub et HackMD ;
+- supervision live depuis `vm-ansible` avec sondes TCP sur les ports clés du lab ;
+- inventaire filtrable par type, statut, IP, rôle, VMID et service ;
+- panneau de détail pour chaque ressource avec rôle, IP, port, VMID, nœud, statut live et commandes utiles ;
+- section de commandes d'exploitation prêtes à copier ;
+- rendu responsive pour consultation depuis un poste fixe ou mobile.
+
+### Vue desktop
+
+<p align="center">
+  <img src="docs/assets/screenshots/showroom-portal-overview-desktop.png" alt="Vue desktop du portail web Showroom HP" width="900">
+</p>
+
+### Vue mobile
+
+<p align="center">
+  <img src="docs/assets/screenshots/showroom-portal-mobile.png" alt="Vue mobile du portail web Showroom HP" width="320">
+</p>
+
+### Capture longue du portail
+
+Cette capture montre la supervision live, les accès rapides et le début de l'inventaire enrichi avec les rôles de chaque ressource.
+
+<p align="center">
+  <img src="docs/assets/screenshots/showroom-portal-full-page.png" alt="Capture longue du portail web Showroom HP avec supervision live et inventaire" width="900">
+</p>
 
 ## Nœuds Proxmox
 
