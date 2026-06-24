@@ -1,0 +1,25 @@
+# Internal asset inventories may contain serial numbers, user names, emails,
+# asset locations, and other data that should not be published in a portfolio repo.
+*.xlsx
+inventory/raw/
+inventory/inventaire reseau.csv
+__pycache__/
+.venv/
+.repo-git/
+
+# Images ISO et médias lourds locaux
+*.iso
+
+# Fichiers pouvant contenir des données sensibles (IPs internes, MACs, noms d'hôtes)
+*.credentials
+secrets/
+*.tfvars
+
+# Terraform artefacts locaux
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+*.tfplan
+.terraform/
+.terraform.bak*/
+.terraform.lock.hcl
