@@ -1,49 +1,53 @@
-# Showroom HP — Documentation finale du projet
+<div align="center">
 
-> Projet d'infrastructure, virtualisation, automatisation et sécurité pour un lab Showroom HP.  
-> Dernière mise à jour : 2026-06-24.
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:000000,100:0d6efd&height=200&section=header&text=Showroom%20HP&fontColor=ffffff&fontSize=60&fontAlignY=38&desc=Proxmox%20%C2%B7%20TrueNAS%20%C2%B7%20Terraform%20%C2%B7%20Ansible%20%C2%B7%20GLPI&descAlignY=60&descSize=18" alt="Showroom HP" width="100%">
 
-<p align="center">
-  <img alt="Proxmox" src="https://img.shields.io/badge/Proxmox-VE-E57000?logo=proxmox&logoColor=white">
-  <img alt="TrueNAS" src="https://img.shields.io/badge/TrueNAS-Scale-0095D5?logo=truenas&logoColor=white">
-  <img alt="Terraform" src="https://img.shields.io/badge/Terraform-IaC-844FBA?logo=terraform&logoColor=white">
-  <img alt="Ansible" src="https://img.shields.io/badge/Ansible-Automation-EE0000?logo=ansible&logoColor=white">
-  <img alt="GLPI" src="https://img.shields.io/badge/GLPI-ITSM-1F6FEB">
-  <img alt="GitHub" src="https://img.shields.io/badge/GitHub-Private%20README-181717?logo=github&logoColor=white">
-</p>
+<img alt="Proxmox" src="https://img.shields.io/badge/Proxmox-VE-E57000?logo=proxmox&logoColor=white">
+<img alt="TrueNAS" src="https://img.shields.io/badge/TrueNAS-Scale-0095D5?logo=truenas&logoColor=white">
+<img alt="Terraform" src="https://img.shields.io/badge/Terraform-IaC-844FBA?logo=terraform&logoColor=white">
+<img alt="Ansible" src="https://img.shields.io/badge/Ansible-Automation-EE0000?logo=ansible&logoColor=white">
+<img alt="GLPI" src="https://img.shields.io/badge/GLPI-ITSM-1F6FEB">
+<img alt="GitHub" src="https://img.shields.io/badge/GitHub-Docs%20README-181717?logo=github&logoColor=white">
 
-## Résumé exécutif
+</div>
 
-Le projet **Showroom HP** a permis de construire et documenter une plateforme on-premise réaliste, basée sur un cluster **Proxmox VE** à trois nœuds, un stockage partagé **TrueNAS**, une automatisation **Terraform/Ansible**, une instance **GLPI**, un monitoring existant et des fondations de durcissement réseau.
+# Showroom HP — Final project documentation
 
-Le résultat est un environnement exploitable pour démonstrations, tests techniques, inventaire IT, scénarios de haute disponibilité et préparation sécurité.
+> Infrastructure, virtualization, automation and security project for a Showroom HP lab.  
+> Last updated: 2026-06-24.
 
-## Sommaire
+## Executive summary
 
-- [Architecture globale](#architecture-globale)
-- [État final](#état-final)
-- [Portail web du showroom](#portail-web-du-showroom)
-- [Nœuds Proxmox](#nœuds-proxmox)
-- [Stockage](#stockage)
-- [Chronologie détaillée](#chronologie-détaillée)
-- [Journal des commandes exécutées](#journal-des-commandes-exécutées)
-- [Virtualisation](#virtualisation)
+The **Showroom HP** project built and documented a realistic on-premise platform, based on a three-node **Proxmox VE** cluster, **TrueNAS** shared storage, **Terraform/Ansible** automation, a **GLPI** instance, an existing monitoring stack and network hardening foundations.
+
+The result is an environment that can be used for demonstrations, technical tests, IT inventory, high-availability scenarios and security preparation.
+
+## Contents
+
+- [Global architecture](#global-architecture)
+- [Final state](#final-state)
+- [Showroom web portal](#showroom-web-portal)
+- [Proxmox nodes](#proxmox-nodes)
+- [Storage](#storage)
+- [Detailed timeline](#detailed-timeline)
+- [Log of executed commands](#log-of-executed-commands)
+- [Virtualization](#virtualization)
 - [Terraform](#terraform)
 - [Ansible](#ansible)
 - [GLPI](#glpi)
 - [Monitoring](#monitoring)
-- [Haute disponibilité](#haute-disponibilité)
-- [Sécurité](#sécurité)
-- [Sécurité offensive contrôlée](#sécurité-offensive-contrôlée)
-- [OPNsense et réseau](#opnsense-et-réseau)
-- [Publication GitHub](#publication-github)
-- [Prochaines étapes](#prochaines-étapes)
+- [High availability](#high-availability)
+- [Security](#security)
+- [Controlled offensive security](#controlled-offensive-security)
+- [OPNsense and network](#opnsense-and-network)
+- [GitHub publication](#github-publication)
+- [Next steps](#next-steps)
 
-## Architecture globale
+## Global architecture
 
 ```mermaid
 flowchart LR
-    Admin[Poste admin] --> PVE[Cluster Proxmox<br/>cluster-sr]
+    Admin[Admin workstation] --> PVE[Proxmox cluster<br/>cluster-sr]
     PVE --> PVE01[pve01<br/>192.168.3.5]
     PVE --> PVE02[pve02<br/>192.168.3.6]
     PVE --> PVE03[pve03<br/>192.168.3.7]
@@ -52,44 +56,44 @@ flowchart LR
     PVE02 --> TN
     PVE03 --> TN
 
-    TN --> ISCSI[iSCSI / LVM partagé<br/>truenas-lvm-shared]
+    TN --> ISCSI[iSCSI / shared LVM<br/>truenas-lvm-shared]
     TN --> NFS[NFS ISO<br/>truenas-nfs-iso]
 
     PVE --> MON[Monitoring<br/>VM 101]
     PVE --> GLPI[GLPI<br/>VM 1301]
     PVE --> ANS[Ansible<br/>VM 1302]
-    PVE --> LEGACY[VMs legacy<br/>100-106]
-    PVE --> TARGET[VMs cibles<br/>1001-1210 hors doublons]
+    PVE --> LEGACY[Legacy VMs<br/>100-106]
+    PVE --> TARGET[Target VMs<br/>1001-1210 excluding duplicates]
 ```
 
-## Vue fonctionnelle
+## Functional view
 
 ```mermaid
 flowchart TB
-    subgraph Couche_Physique[Couche physique]
-        HP[Serveurs HP]
+    subgraph Couche_Physique[Physical layer]
+        HP[HP servers]
         TNAS[TrueNAS]
         NET[Switching / VLAN]
     end
 
-    subgraph Virtualisation[Virtualisation Proxmox]
+    subgraph Virtualisation[Proxmox virtualization]
         CL[cluster-sr]
         HA[HA Manager]
-        LVM[Stockage partagé]
+        LVM[Shared storage]
     end
 
-    subgraph Services[Services utiles]
+    subgraph Services[Useful services]
         MON2[Monitoring VM 101]
         GLPI2[GLPI VM 1301]
         ANS2[Ansible VM 1302]
-        LEG[VMs legacy 100-106]
+        LEG[Legacy VMs 100-106]
     end
 
-    subgraph Gouvernance[Gouvernance et sécurité]
+    subgraph Gouvernance[Governance and security]
         TF[Terraform]
         RUN[Runbooks]
         FW[OPNsense / Firewall]
-        DOC[README final]
+        DOC[Final README]
     end
 
     HP --> CL
@@ -106,238 +110,238 @@ flowchart TB
     DOC --> RUN
 ```
 
-## État final
+## Final state
 
-| Domaine | État |
+| Area | State |
 |---|---|
-| Cluster Proxmox | 3 nœuds, quorum OK |
-| Stockage partagé | TrueNAS iSCSI/LVM actif sur les nœuds |
-| ISO/images | NFS TrueNAS actif |
-| VMs legacy | `100-106` conservées, HA opérationnel |
+| Proxmox cluster | 3 nodes, quorum OK |
+| Shared storage | TrueNAS iSCSI/LVM active on the nodes |
+| ISO/images | TrueNAS NFS active |
+| Legacy VMs | `100-106` kept, HA operational |
 | Monitoring | VM `101 monitoring` active |
-| GLPI | VM `1301 vm-glpi`, HTTP validé |
-| Ansible | VM `1302 vm-ansible`, bootstrap terminé |
-| Portail web showroom | Hébergé sur `vm-ansible`, accessible via `http://192.168.3.112:8088/` |
-| Doublons | `1000`, `1003`, `1006`, `1100`, `1300` supprimés |
-| Terraform | 42 ressources, configuration valide, plan final sans changement |
-| Documentation | README final publié comme documentation principale |
+| GLPI | VM `1301 vm-glpi`, HTTP validated |
+| Ansible | VM `1302 vm-ansible`, bootstrap completed |
+| Showroom web portal | Hosted on `vm-ansible`, reachable at `http://192.168.3.112:8088/` |
+| Duplicates | `1000`, `1003`, `1006`, `1100`, `1300` removed |
+| Terraform | 42 resources, valid configuration, final plan with no changes |
+| Documentation | Final README published as the main documentation |
 
-## Portail web du showroom
+## Showroom web portal
 
-Une interface web dédiée a été réalisée pour centraliser l'exploitation du lab/showroom.  
-Elle est hébergée directement dans l'environnement showroom sur la VM `vm-ansible` (`192.168.3.112`) avec un service `systemd` permanent.
+A dedicated web interface was built to centralize the operation of the lab/showroom.  
+It is hosted directly in the showroom environment on the `vm-ansible` VM (`192.168.3.112`) with a permanent `systemd` service.
 
-| Élément | Valeur |
+| Item | Value |
 |---|---|
-| URL interne | `http://192.168.3.112:8088/` |
-| VM d'hébergement | `vm-ansible` |
-| Répertoire | `/opt/showroom-lab-portal` |
+| Internal URL | `http://192.168.3.112:8088/` |
+| Hosting VM | `vm-ansible` |
+| Directory | `/opt/showroom-lab-portal` |
 | Service | `showroom-lab-portal.service` |
-| API live | `/api/health` |
-| API système | `/api/system` |
+| Live API | `/api/health` |
+| System API | `/api/system` |
 
-Fonctions intégrées :
+Built-in features:
 
-- accès rapides vers Proxmox, TrueNAS, OPNsense, GLPI, Grafana, iLO, GitHub et HackMD ;
-- supervision live depuis `vm-ansible` avec sondes TCP sur les ports clés du lab ;
-- inventaire filtrable par type, statut, IP, rôle, VMID et service ;
-- panneau de détail pour chaque ressource avec rôle, IP, port, VMID, nœud, statut live et commandes utiles ;
-- section de commandes d'exploitation prêtes à copier ;
-- rendu responsive pour consultation depuis un poste fixe ou mobile.
+- quick links to Proxmox, TrueNAS, OPNsense, GLPI, Grafana, iLO, GitHub and HackMD;
+- live monitoring from `vm-ansible` with TCP probes on the lab's key ports;
+- inventory filterable by type, status, IP, role, VMID and service;
+- detail panel for each resource with role, IP, port, VMID, node, live status and useful commands;
+- section of ready-to-copy operation commands;
+- responsive rendering for desktop or mobile use.
 
-### Vue desktop
-
-<p align="center">
-  <img src="docs/assets/screenshots/showroom-portal-overview-desktop.png" alt="Vue desktop du portail web Showroom HP" width="900">
-</p>
-
-### Vue mobile
+### Desktop view
 
 <p align="center">
-  <img src="docs/assets/screenshots/showroom-portal-mobile.png" alt="Vue mobile du portail web Showroom HP" width="320">
+  <img src="docs/assets/screenshots/showroom-portal-overview-desktop.png" alt="Desktop view of the Showroom HP web portal" width="900">
 </p>
 
-### Capture longue du portail
-
-Cette capture montre la supervision live, les accès rapides et le début de l'inventaire enrichi avec les rôles de chaque ressource.
+### Mobile view
 
 <p align="center">
-  <img src="docs/assets/screenshots/showroom-portal-full-page.png" alt="Capture longue du portail web Showroom HP avec supervision live et inventaire" width="900">
+  <img src="docs/assets/screenshots/showroom-portal-mobile.png" alt="Mobile view of the Showroom HP web portal" width="320">
 </p>
 
-## Nœuds Proxmox
+### Full-page capture of the portal
 
-| Nœud | IP | Rôle | État |
+This capture shows the live monitoring, the quick links and the start of the inventory enriched with the role of each resource.
+
+<p align="center">
+  <img src="docs/assets/screenshots/showroom-portal-full-page.png" alt="Full-page capture of the Showroom HP web portal with live monitoring and inventory" width="900">
+</p>
+
+## Proxmox nodes
+
+| Node | IP | Role | State |
 |---|---:|---|---|
-| `pve01` | `192.168.3.5` | Nœud principal / HA actif | OK |
-| `pve02` | `192.168.3.6` | Nœud secondaire / HA actif | OK |
-| `pve03` | `192.168.3.7` | Nœud testé en extinction | OK après correction iSCSI |
+| `pve01` | `192.168.3.5` | Main node / HA active | OK |
+| `pve02` | `192.168.3.6` | Secondary node / HA active | OK |
+| `pve03` | `192.168.3.7` | Node tested with a shutdown | OK after iSCSI fix |
 
-## Stockage
+## Storage
 
 ```mermaid
 flowchart TB
     subgraph TrueNAS
-        Pool[Pool ZFS]
-        LUN[LUN iSCSI 6 TB]
-        Share[Partage NFS ISO]
+        Pool[ZFS pool]
+        LUN[6 TB iSCSI LUN]
+        Share[NFS ISO share]
     end
 
     subgraph Proxmox
-        LVM[Storage Proxmox<br/>truenas-lvm-shared]
-        ISO[Storage Proxmox<br/>truenas-nfs-iso]
+        LVM[Proxmox storage<br/>truenas-lvm-shared]
+        ISO[Proxmox storage<br/>truenas-nfs-iso]
     end
 
     Pool --> LUN --> LVM
     Pool --> Share --> ISO
 ```
 
-Réalisé :
+Done:
 
-- création et validation du stockage `truenas-lvm-shared` ;
-- migration des disques VM vers le stockage partagé ;
-- stockage ISO NFS opérationnel ;
-- validation de `pve-shared` après redémarrage de `pve03` ;
-- correction du service `open-iscsi` sur `pve03` après test d'extinction ;
-- validation finale du stockage sur le cluster.
+- creation and validation of the `truenas-lvm-shared` storage;
+- migration of the VM disks to the shared storage;
+- NFS ISO storage operational;
+- validation of `pve-shared` after the restart of `pve03`;
+- fix of the `open-iscsi` service on `pve03` after the shutdown test;
+- final validation of the storage across the cluster.
 
-## Chronologie détaillée
+## Detailed timeline
 
-### Phase 1 — Création du cluster Proxmox
+### Phase 1 — Creating the Proxmox cluster
 
-Situation initiale :
+Initial situation:
 
-- `pve01` existait comme nœud principal ;
-- `pve02` était disponible pour rejoindre le cluster ;
-- `pve03` n'était pas encore intégré au périmètre final.
+- `pve01` existed as the main node;
+- `pve02` was available to join the cluster;
+- `pve03` was not yet part of the final scope.
 
-Réalisé :
+Done:
 
-- préparation de la résolution inter-nœuds ;
-- jointure de `pve02` au cluster ;
-- validation du quorum ;
-- stabilisation du premier socle Proxmox.
+- preparation of inter-node name resolution;
+- `pve02` joined the cluster;
+- quorum validation;
+- stabilization of the first Proxmox foundation.
 
-Résultat : cluster initial fonctionnel, base prête pour l'ajout du troisième nœud.
+Result: working initial cluster, ready for the addition of the third node.
 
-### Phase 2 — Durcissement d'accès
+### Phase 2 — Access hardening
 
-Réalisé :
+Done:
 
-- génération et déploiement de clés SSH administrateur ;
-- passage de l'accès root SSH en mode clé uniquement ;
-- création du compte nommé `bkh@pve` ;
-- création d'un token API pour l'automatisation ;
-- préparation du firewall datacenter avec allowlist d'administration et flux cluster.
+- generation and deployment of administrator SSH keys;
+- SSH root access switched to key-only mode;
+- creation of the named account `bkh@pve`;
+- creation of an API token for automation;
+- preparation of the datacenter firewall with an administration allowlist and cluster flows.
 
-Résultat : accès d'administration plus propre, compatible avec Terraform et les runbooks d'exploitation.
+Result: cleaner administration access, compatible with Terraform and the operations runbooks.
 
-### Phase 3 — Intégration de `pve03` et TrueNAS
+### Phase 3 — Integrating `pve03` and TrueNAS
 
-Réalisé :
+Done:
 
-- intégration de `pve03` au cluster final `cluster-sr` ;
-- standardisation des IPs Proxmox ;
-- connexion à TrueNAS ;
-- création du stockage NFS pour les ISOs ;
-- création de la cible iSCSI pour les disques VM.
+- integration of `pve03` into the final `cluster-sr` cluster;
+- standardization of the Proxmox IPs;
+- connection to TrueNAS;
+- creation of the NFS storage for the ISOs;
+- creation of the iSCSI target for the VM disks.
 
-Résultat : cluster à trois nœuds avec stockage centralisé.
+Result: three-node cluster with centralized storage.
 
-### Phase 4 — Migration vers stockage partagé
+### Phase 4 — Migration to shared storage
 
-La solution retenue pour les disques VM est :
+The solution chosen for the VM disks is:
 
 ```text
-TrueNAS zvol 6 TB
-→ cible iSCSI
-→ LVM Proxmox pve-shared
+TrueNAS 6 TB zvol
+→ iSCSI target
+→ Proxmox LVM pve-shared
 → storage truenas-lvm-shared
 ```
 
-Réalisé :
+Done:
 
-- abandon des approches non adaptées au besoin HA ;
-- création du volume LVM partagé ;
-- migration progressive des disques VM ;
-- extension du stockage jusqu'à 6 TB ;
-- configuration de l'auto-login iSCSI ;
-- ajout de la détection automatique du VG au boot.
+- abandonment of approaches unsuited to the HA requirement;
+- creation of the shared LVM volume;
+- progressive migration of the VM disks;
+- storage extension up to 6 TB;
+- configuration of iSCSI auto-login;
+- addition of automatic VG detection at boot.
 
-Résultat : les VMs peuvent être relocalisées entre nœuds avec accès au même stockage.
+Result: VMs can be relocated between nodes with access to the same storage.
 
-### Phase 5 — Haute disponibilité
+### Phase 5 — High availability
 
-Réalisé :
+Done:
 
-- activation HA sur les VMs legacy critiques ;
-- validation du quorum à trois nœuds ;
-- test de live migration ;
-- test de perte de nœud ;
-- correction du comportement HA pour les VMs cloud-init.
+- HA enabled on the critical legacy VMs;
+- validation of the three-node quorum;
+- live migration test;
+- node loss test;
+- fix of the HA behavior for cloud-init VMs.
 
-Résultat : HA validée, avec un point d'attention identifié puis corrigé sur les snippets cloud-init.
+Result: HA validated, with one point of attention identified and then fixed on the cloud-init snippets.
 
-### Phase 6 — Tests de validation
+### Phase 6 — Validation tests
 
-| Test | Résultat |
+| Test | Result |
 |---|---|
-| Live migration | Validée |
-| Failover HA | Validé |
-| Extinction volontaire de `pve03` | Quorum conservé |
-| Retour de `pve03` | iSCSI corrigé puis validé |
-| Terraform final | `No changes` |
+| Live migration | Validated |
+| HA failover | Validated |
+| Voluntary shutdown of `pve03` | Quorum kept |
+| Return of `pve03` | iSCSI fixed then validated |
+| Final Terraform | `No changes` |
 | GLPI HTTP | `200 OK` |
-| Ansible vers GLPI/Ansible | `pong` |
+| Ansible to GLPI/Ansible | `pong` |
 
 ### Phase 7 — Infrastructure as Code
 
-Réalisé avec Terraform :
+Done with Terraform:
 
-- création du catalogue de VMs ;
-- création des VMs ISO ;
-- création des VMs Linux cloud-init ;
-- import des VMs legacy ;
-- protection des VMs legacy ;
-- suppression logique et réelle des doublons ;
-- stabilisation du plan final.
+- creation of the VM catalog;
+- creation of the ISO VMs;
+- creation of the cloud-init Linux VMs;
+- import of the legacy VMs;
+- protection of the legacy VMs;
+- logical and actual removal of the duplicates;
+- stabilization of the final plan.
 
-État final : Terraform gère l'intention actuelle sans vouloir recréer les doublons supprimés.
+Final state: Terraform manages the current intent without trying to recreate the removed duplicates.
 
-### Phase 8 — Test d'extinction de `pve03`
+### Phase 8 — `pve03` shutdown test
 
-Observation :
+Observation:
 
-- le cluster est resté quorate avec `pve01` et `pve02` ;
-- la VM `106` a été relancée par HA ;
-- les VMs cloud-init ont révélé une dépendance aux snippets stockés en local.
+- the cluster stayed quorate with `pve01` and `pve02`;
+- VM `106` was restarted by HA;
+- the cloud-init VMs revealed a dependency on locally stored snippets.
 
-Correction :
+Fix:
 
-- synchronisation des snippets utiles sur les nœuds ;
-- retrait du doublon `1300` ;
-- relance et validation des VMs utiles ;
-- réparation d'`open-iscsi` au retour de `pve03`.
+- synchronization of the useful snippets across the nodes;
+- removal of the `1300` duplicate;
+- restart and validation of the useful VMs;
+- repair of `open-iscsi` when `pve03` came back.
 
-Résultat : incident compris, corrigé et documenté dans le README.
+Result: incident understood, fixed and documented in the README.
 
-### Phase 9 — Documentation finale et publication
+### Phase 9 — Final documentation and publication
 
-Réalisé :
+Done:
 
-- consolidation de la documentation finale dans ce README ;
-- suppression des fichiers de documentation de travail remplacés ;
-- exclusion des fichiers sensibles et lourds ;
-- création d'un nouveau dépôt GitHub privé dédié ;
-- publication minimale : `README.md` et `.gitignore` uniquement.
+- consolidation of the final documentation in this README;
+- removal of the working documentation files it replaced;
+- exclusion of sensitive and heavy files;
+- creation of a new dedicated GitHub repository;
+- minimal publication: `README.md` and `.gitignore` only.
 
-Résultat : le dépôt GitHub sert de vitrine documentaire propre sans publier les sources sensibles du lab.
+Result: the GitHub repository serves as a clean documentation showcase without publishing the sensitive sources of the lab.
 
-## Journal des commandes exécutées
+## Log of executed commands
 
-Les commandes ci-dessous reprennent les commandes exécutées ou utilisées pendant le projet. Les secrets, tokens, mots de passe et clés privées sont remplacés par des placeholders.
+The commands below reproduce the commands executed or used during the project. Secrets, tokens, passwords and private keys are replaced with placeholders.
 
-### Phase 1 — Création et validation du cluster
+### Phase 1 — Cluster creation and validation
 
 ```bash
 hostname
@@ -347,15 +351,15 @@ pvecm status
 pvecm nodes
 ```
 
-Jointure d'un nœud au cluster :
+Joining a node to the cluster:
 
 ```bash
-pvecm add <IP_DU_NOEUD_EXISTANT>
+pvecm add <EXISTING_NODE_IP>
 pvecm status
 pvecm nodes
 ```
 
-Jointure via API Proxmox, utilisée dans le runbook initial :
+Join through the Proxmox API, used in the initial runbook:
 
 ```bash
 curl -k -X POST "https://<PVE_IP>:8006/api2/json/cluster/config/join" \
@@ -366,7 +370,7 @@ curl -k -X POST "https://<PVE_IP>:8006/api2/json/cluster/config/join" \
   --data-urlencode "fingerprint=<TLS_FINGERPRINT>"
 ```
 
-### Phase 2 — Durcissement SSH et accès Proxmox
+### Phase 2 — SSH hardening and Proxmox access
 
 ```bash
 ssh-keygen -t ed25519 -C "bkh@pop-os-admin"
@@ -375,7 +379,7 @@ ssh-copy-id root@192.168.3.6
 ssh-copy-id root@192.168.3.7
 ```
 
-Durcissement SSH :
+SSH hardening:
 
 ```bash
 sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
@@ -383,7 +387,7 @@ systemctl restart ssh
 ssh -o BatchMode=yes root@192.168.3.5 "hostname && whoami"
 ```
 
-Compte nommé et token API :
+Named account and API token:
 
 ```bash
 pveum user add bkh@pve --comment "Named admin account"
@@ -392,7 +396,7 @@ pveum user token add root@pam automation --privsep 0
 pveum aclmod / -token root@pam!automation -role Administrator
 ```
 
-Contrôle firewall Proxmox :
+Proxmox firewall check:
 
 ```bash
 pve-firewall status
@@ -400,9 +404,9 @@ pve-firewall compile
 pve-firewall restart
 ```
 
-### Phase 3 — Intégration TrueNAS NFS et iSCSI
+### Phase 3 — TrueNAS NFS and iSCSI integration
 
-Découverte iSCSI :
+iSCSI discovery:
 
 ```bash
 iscsiadm -m discovery -t sendtargets -p 192.168.3.4
@@ -410,14 +414,14 @@ iscsiadm -m node -T iqn.2005-10.org.freenas.ctl:iscsi-vm -p 192.168.3.4:3260 --l
 iscsiadm -m session
 ```
 
-Activation au démarrage :
+Enabling at boot:
 
 ```bash
 systemctl enable --now open-iscsi
 systemctl status open-iscsi --no-pager
 ```
 
-Ajout du stockage ISO NFS :
+Adding the NFS ISO storage:
 
 ```bash
 pvesm add nfs truenas-nfs-iso \
@@ -428,25 +432,25 @@ pvesm add nfs truenas-nfs-iso \
 pvesm status
 ```
 
-### Phase 4 — Création du LVM partagé
+### Phase 4 — Creating the shared LVM
 
-Identification du disque :
+Identifying the disk:
 
 ```bash
 lsblk
 ls -l /dev/disk/by-path/
 ```
 
-Création du PV/VG :
+Creating the PV/VG:
 
 ```bash
-pvcreate /dev/<DISQUE_ISCSI>
-vgcreate pve-shared /dev/<DISQUE_ISCSI>
+pvcreate /dev/<ISCSI_DISK>
+vgcreate pve-shared /dev/<ISCSI_DISK>
 vgs
 vgdisplay pve-shared
 ```
 
-Ajout dans Proxmox :
+Adding it to Proxmox:
 
 ```bash
 pvesm add lvm truenas-lvm-shared \
@@ -457,7 +461,7 @@ pvesm add lvm truenas-lvm-shared \
 pvesm status
 ```
 
-Rescan et détection après reboot :
+Rescan and detection after reboot:
 
 ```bash
 iscsiadm -m session --rescan
@@ -466,7 +470,7 @@ vgdisplay pve-shared
 pvesm status
 ```
 
-Correction appliquée au retour de `pve03` :
+Fix applied when `pve03` came back:
 
 ```bash
 iscsiadm -m node -T iqn.2005-10.org.freenas.ctl:iscsi-vm -p 192.168.3.4:3260 --login
@@ -477,9 +481,9 @@ systemctl start open-iscsi
 systemctl is-active open-iscsi
 ```
 
-### Phase 5 — Migration disques et HA
+### Phase 5 — Disk migration and HA
 
-Migration de disques vers le stockage partagé :
+Migrating disks to the shared storage:
 
 ```bash
 qm config <VMID>
@@ -488,7 +492,7 @@ qm rescan
 qm config <VMID>
 ```
 
-Création et consultation HA :
+Creating and checking HA:
 
 ```bash
 ha-manager status
@@ -497,7 +501,7 @@ ha-manager add vm:<VMID> --state started --group prod-nodes
 ha-manager set vm:<VMID> --state started
 ```
 
-Live migration :
+Live migration:
 
 ```bash
 qm migrate 103 pve01 --online
@@ -505,7 +509,7 @@ ha-manager status
 qm status 103
 ```
 
-Test HA encadré :
+Supervised HA test:
 
 ```bash
 systemctl stop corosync
@@ -516,7 +520,7 @@ systemctl start corosync
 
 ### Phase 6 — Terraform
 
-Initialisation et validation :
+Initialization and validation:
 
 ```bash
 cd terraform
@@ -526,14 +530,14 @@ terraform validate
 terraform plan
 ```
 
-Création des lots VM :
+Creating the VM batches:
 
 ```bash
 terraform plan -out=plan-vms.tfplan
 terraform apply plan-vms.tfplan
 ```
 
-Import des VMs legacy :
+Importing the legacy VMs:
 
 ```bash
 terraform import 'proxmox_virtual_environment_vm.legacy_vms["legacy-auth"]' 100
@@ -544,7 +548,7 @@ terraform import 'proxmox_virtual_environment_vm.legacy_vms["legacy-ts"]' 104
 terraform import 'proxmox_virtual_environment_vm.legacy_vms["legacy-db"]' 105
 ```
 
-Inspection du state :
+Inspecting the state:
 
 ```bash
 terraform state list | sort
@@ -552,7 +556,7 @@ terraform state show 'proxmox_virtual_environment_vm.linux_vms["vm-glpi"]'
 terraform output
 ```
 
-Plan final utilisé après correction des doublons :
+Final plan used after fixing the duplicates:
 
 ```bash
 terraform fmt -check legacy_vms.tf linux_vms.tf locals.tf outputs.tf providers.tf variables.tf vms.tf
@@ -560,9 +564,9 @@ terraform validate
 terraform plan -refresh=false -no-color
 ```
 
-### Phase 7 — Cloud-init et snippets
+### Phase 7 — Cloud-init and snippets
 
-Préparation du stockage snippets :
+Preparing the snippets storage:
 
 ```bash
 for NODE in 192.168.3.5 192.168.3.6 192.168.3.7; do
@@ -570,13 +574,13 @@ for NODE in 192.168.3.5 192.168.3.6 192.168.3.7; do
 done
 ```
 
-Synchronisation des snippets utiles :
+Synchronizing the useful snippets:
 
 ```bash
 ./scripts/proxmox-sync-cloud-init-snippets.sh
 ```
 
-Commandes utilisées par le script :
+Commands used by the script:
 
 ```bash
 ssh root@<NODE> "mkdir -p /var/lib/vz/snippets"
@@ -584,9 +588,9 @@ scp terraform/cloud-init/glpi.yaml root@<NODE>:/var/lib/vz/snippets/ci-vm-glpi.y
 scp terraform/cloud-init/ansible.yaml root@<NODE>:/var/lib/vz/snippets/ci-vm-ansible.yaml
 ```
 
-### Phase 8 — Test d'extinction `pve03`
+### Phase 8 — `pve03` shutdown test
 
-État cluster avant/après :
+Cluster state before/after:
 
 ```bash
 pvecm status
@@ -594,7 +598,7 @@ ha-manager status
 pvesm status
 ```
 
-Vérification réseau et stockage au retour de `pve03` :
+Network and storage check when `pve03` came back:
 
 ```bash
 ssh root@192.168.3.7 "hostname"
@@ -604,9 +608,9 @@ ssh root@192.168.3.7 "pvesm status"
 ssh root@192.168.3.7 "vgs && lvs"
 ```
 
-### Phase 9 — Ansible et GLPI
+### Phase 9 — Ansible and GLPI
 
-Tests de connectivité :
+Connectivity tests:
 
 ```bash
 cd ansible
@@ -615,21 +619,21 @@ ansible vm-glpi -m ping
 ansible vm-ansible -m ping
 ```
 
-Correction des clés hôtes après relocalisation HA :
+Fixing host keys after HA relocation:
 
 ```bash
 ssh-keyscan -T 8 -t ed25519,rsa 192.168.3.111
 ssh-keyscan -T 8 -t ed25519,rsa 192.168.3.112
 ```
 
-Installation GLPI :
+GLPI installation:
 
 ```bash
 ansible-playbook playbooks/glpi-foundation.yml --syntax-check
 ansible-playbook playbooks/glpi-foundation.yml
 ```
 
-Validation GLPI :
+GLPI validation:
 
 ```bash
 curl -I --max-time 8 http://192.168.3.111
@@ -637,29 +641,29 @@ ansible vm-glpi -b -m shell -a 'cd /var/www/glpi && sudo -u www-data php bin/con
 ansible vm-glpi -b -m shell -a 'test ! -f /var/www/glpi/install/install.php && echo installer-removed'
 ```
 
-Rotation du mot de passe DB :
+DB password rotation:
 
 ```bash
 ansible-playbook playbooks/glpi-rotate-db-password.yml
 ```
 
-### Phase 10 — Suppression des doublons
+### Phase 10 — Removing duplicates
 
-Plan de suppression :
+Removal plan:
 
 ```bash
 terraform plan -refresh=false -no-color -out=remove-duplicate-vms.tfplan
 terraform apply -no-color remove-duplicate-vms.tfplan
 ```
 
-Nettoyage de références orphelines :
+Cleaning up orphaned references:
 
 ```bash
 terraform state rm 'proxmox_haresource.linux_vms["vm-monitoring"]'
 terraform state rm 'proxmox_virtual_environment_vm.linux_vms["vm-monitoring"]'
 ```
 
-Nettoyage des snippets orphelins :
+Cleaning up orphaned snippets:
 
 ```bash
 for node in 192.168.3.5 192.168.3.6 192.168.3.7; do
@@ -667,7 +671,7 @@ for node in 192.168.3.5 192.168.3.6 192.168.3.7; do
 done
 ```
 
-Vérification finale :
+Final check:
 
 ```bash
 pvesh get /cluster/resources --type vm | grep -E '(^|[^0-9])(1000|1003|1006|1100|1300)([^0-9]|$)' || true
@@ -676,25 +680,25 @@ terraform state list | grep -E 'vm-monitoring|vms\["(AUTH|SQL|TS|HP-PRINT-MGMT)"
 terraform plan -refresh=false -no-color
 ```
 
-### Phase 11 — Publication GitHub minimale
+### Phase 11 — Minimal GitHub publication
 
-Création du dépôt privé :
+Creating the repository:
 
 ```bash
-gh repo create bilkl/showroom-hp-infrastructure \
+gh repo create xbkh/showroom-hp-infrastructure \
   --private \
-  --description "Documentation finale et infrastructure as code du projet Showroom HP"
+  --description "Final documentation and infrastructure as code of the Showroom HP project"
 ```
 
-Création du dépôt local séparé :
+Creating the separate local repository:
 
 ```bash
 git --git-dir=.repo-git --work-tree=. init
 git --git-dir=.repo-git --work-tree=. branch -m main
-git --git-dir=.repo-git --work-tree=. remote add origin https://github.com/bilkl/showroom-hp-infrastructure.git
+git --git-dir=.repo-git --work-tree=. remote add origin https://github.com/xbkh/showroom-hp-infrastructure.git
 ```
 
-Publication volontairement limitée :
+Deliberately limited publication:
 
 ```bash
 git --git-dir=.repo-git --work-tree=. add README.md .gitignore
@@ -702,161 +706,161 @@ git --git-dir=.repo-git --work-tree=. commit -m "Add final showroom HP documenta
 git --git-dir=.repo-git --work-tree=. push -u origin main
 ```
 
-Vérification GitHub :
+GitHub verification:
 
 ```bash
-gh api repos/bilkl/showroom-hp-infrastructure/git/trees/main?recursive=1 --jq '.tree[].path'
-gh repo view bilkl/showroom-hp-infrastructure --json nameWithOwner,visibility,url,defaultBranchRef
+gh api repos/xbkh/showroom-hp-infrastructure/git/trees/main?recursive=1 --jq '.tree[].path'
+gh repo view xbkh/showroom-hp-infrastructure --json nameWithOwner,visibility,url,defaultBranchRef
 ```
 
-## Virtualisation
+## Virtualization
 
-### VMs legacy conservées
+### Legacy VMs kept
 
-Ces VMs existaient déjà et restent les références de production. Elles sont importées dans Terraform avec protection `ignore_changes = all`.
+These VMs already existed and remain the production references. They are imported into Terraform with `ignore_changes = all` protection.
 
-| VMID | Nom | Rôle | État |
+| VMID | Name | Role | State |
 |---:|---|---|---|
-| 100 | `auth` | Authentification / infra | Running |
+| 100 | `auth` | Authentication / infrastructure | Running |
 | 101 | `monitoring` | Grafana, Prometheus, InfluxDB | Running |
-| 102 | `inventory-app` | Inventaire existant | Running |
-| 103 | `hp-print-mgmt` | Gestion impression HP | Running |
+| 102 | `inventory-app` | Existing inventory | Running |
+| 103 | `hp-print-mgmt` | HP print management | Running |
 | 104 | `TS` | Terminal server | Running |
-| 105 | `DB` | Base de données | Running |
-| 106 | `3cx` | Téléphonie | Running |
+| 105 | `DB` | Database | Running |
+| 106 | `3cx` | Telephony | Running |
 
-### VMs Terraform restantes
+### Remaining Terraform VMs
 
-| Lot | VMID | État |
+| Batch | VMID | State |
 |---|---:|---|
-| Infrastructure Windows | `1001-1009` hors doublons | Créées, OS à installer |
-| Impression / solutions HP | `1101-1111` | Créées, OS à installer |
-| Clients de démonstration | `1200-1210` | Créées, OS à installer |
-| Linux cloud-init | `1301-1302` | Actives |
+| Windows infrastructure | `1001-1009` excluding duplicates | Created, OS to be installed |
+| HP printing / solutions | `1101-1111` | Created, OS to be installed |
+| Demo clients | `1200-1210` | Created, OS to be installed |
+| Linux cloud-init | `1301-1302` | Active |
 
-### Doublons supprimés
+### Duplicates removed
 
-| VM supprimée | Doublon de | Décision |
+| Removed VM | Duplicate of | Decision |
 |---:|---|---|
-| `1000 AUTH` | `100 auth` | Supprimée |
-| `1003 SQL` | `105 DB` | Supprimée |
-| `1006 TS` | `104 TS` | Supprimée |
-| `1100 HP-PRINT-MGMT` | `103 hp-print-mgmt` | Supprimée |
-| `1300 vm-monitoring` | `101 monitoring` | Supprimée |
+| `1000 AUTH` | `100 auth` | Removed |
+| `1003 SQL` | `105 DB` | Removed |
+| `1006 TS` | `104 TS` | Removed |
+| `1100 HP-PRINT-MGMT` | `103 hp-print-mgmt` | Removed |
+| `1300 vm-monitoring` | `101 monitoring` | Removed |
 
 ## Terraform
 
-Terraform décrit l'infrastructure Proxmox reproductible.
+Terraform describes the reproducible Proxmox infrastructure.
 
 ```mermaid
 flowchart LR
-    HCL[Fichiers .tf] --> Plan[terraform plan]
-    Plan --> Review[Validation humaine]
+    HCL[.tf files] --> Plan[terraform plan]
+    Plan --> Review[Human review]
     Review --> Apply[terraform apply]
-    Apply --> PVE[API Proxmox]
-    PVE --> State[State local ignoré par Git]
+    Apply --> PVE[Proxmox API]
+    PVE --> State[Local state ignored by Git]
 ```
 
-Réalisé :
+Done:
 
-- provider `bpg/proxmox` configuré ;
-- catalogue VM dans `terraform/locals.tf` ;
-- création des VMs ISO ;
-- création des VMs Linux cloud-init ;
-- import des VMs legacy `100-105` ;
-- protection des VMs legacy avec `ignore_changes = all` ;
-- ajout des filtres `local.active_vms` et `local.active_linux_vms` pour éviter de recréer les doublons supprimés ;
-- correction du drift HA en ignorant `node_name` pour les VMs Linux ;
-- état final validé avec `terraform plan -refresh=false` : **No changes**.
+- `bpg/proxmox` provider configured;
+- VM catalog in `terraform/locals.tf`;
+- creation of the ISO VMs;
+- creation of the cloud-init Linux VMs;
+- import of the legacy VMs `100-105`;
+- protection of the legacy VMs with `ignore_changes = all`;
+- addition of the `local.active_vms` and `local.active_linux_vms` filters to avoid recreating the removed duplicates;
+- fix of the HA drift by ignoring `node_name` for the Linux VMs;
+- final state validated with `terraform plan -refresh=false`: **No changes**.
 
-Fichiers importants :
+Important files:
 
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `terraform/locals.tf` | Catalogue VM et filtres des VMs actives |
-| `terraform/vms.tf` | VMs ISO |
-| `terraform/linux_vms.tf` | VMs Debian cloud-init |
-| `terraform/legacy_vms.tf` | Import/protection des VMs legacy |
-| `terraform/outputs.tf` | Sorties Terraform propres |
+| `terraform/locals.tf` | VM catalog and active-VM filters |
+| `terraform/vms.tf` | ISO VMs |
+| `terraform/linux_vms.tf` | Debian cloud-init VMs |
+| `terraform/legacy_vms.tf` | Import/protection of the legacy VMs |
+| `terraform/outputs.tf` | Clean Terraform outputs |
 
-Sécurité Git :
+Git safety:
 
-- `terraform.tfvars` ignoré ;
-- `*.tfstate` ignoré ;
-- `*.tfplan` ignoré ;
-- `.terraform/` ignoré ;
-- l'ISO Proxmox et les fichiers Excel locaux sont ignorés.
+- `terraform.tfvars` ignored;
+- `*.tfstate` ignored;
+- `*.tfplan` ignored;
+- `.terraform/` ignored;
+- the Proxmox ISO and local Excel files are ignored.
 
 ## Ansible
 
-Ansible sert à administrer les VMs Linux et à automatiser les services.
+Ansible is used to administer the Linux VMs and automate the services.
 
-Réalisé :
+Done:
 
-- inventaire dans `ansible/inventory/hosts.yml` ;
-- configuration SSH dédiée dans `ansible/ansible.cfg` ;
-- correction des clés SSH connues après relocalisation HA ;
-- bootstrap de `vm-ansible` ;
-- installation complète de GLPI ;
-- playbook de rotation du mot de passe DB GLPI ;
-- playbook monitoring conservé uniquement pour nouvelle cible éventuelle.
+- inventory in `ansible/inventory/hosts.yml`;
+- dedicated SSH configuration in `ansible/ansible.cfg`;
+- fix of the known SSH keys after HA relocation;
+- bootstrap of `vm-ansible`;
+- complete GLPI installation;
+- GLPI DB password rotation playbook;
+- monitoring playbook kept only for a possible new target.
 
-Playbooks :
+Playbooks:
 
 | Playbook | Usage |
 |---|---|
-| `ansible/playbooks/bootstrap-ansible-node.yml` | Préparation de `vm-ansible` |
-| `ansible/playbooks/glpi-foundation.yml` | Installation GLPI complète |
-| `ansible/playbooks/glpi-rotate-db-password.yml` | Rotation du mot de passe DB GLPI |
-| `ansible/playbooks/monitoring-stack.yml` | Stack monitoring pour nouvelle cible uniquement |
+| `ansible/playbooks/bootstrap-ansible-node.yml` | Preparation of `vm-ansible` |
+| `ansible/playbooks/glpi-foundation.yml` | Complete GLPI installation |
+| `ansible/playbooks/glpi-rotate-db-password.yml` | GLPI DB password rotation |
+| `ansible/playbooks/monitoring-stack.yml` | Monitoring stack for a new target only |
 
 ## GLPI
 
-GLPI est installé sur `vm-glpi`.
+GLPI is installed on `vm-glpi`.
 
-| Élément | Valeur |
+| Item | Value |
 |---|---|
 | VMID | `1301` |
 | IP | `192.168.3.111` |
 | Version | `11.0.7` |
 | Web | `http://192.168.3.111` |
-| Serveur web | Nginx |
+| Web server | Nginx |
 | PHP | PHP-FPM |
-| Base | MariaDB |
+| Database | MariaDB |
 
-Réalisé :
+Done:
 
-- installation GLPI via Ansible ;
-- création de la base MariaDB ;
-- génération du mot de passe DB côté VM ;
-- rotation du mot de passe applicatif après installation ;
-- suppression de l'installateur web ;
-- validation HTTP `200 OK` ;
-- validation des prérequis GLPI requis.
+- GLPI installation through Ansible;
+- creation of the MariaDB database;
+- generation of the DB password on the VM side;
+- rotation of the application password after installation;
+- removal of the web installer;
+- HTTP `200 OK` validation;
+- validation of the required GLPI prerequisites.
 
-Reste à faire :
+Still to do:
 
-- changer les comptes par défaut ;
-- importer l'inventaire matériel et VM ;
-- structurer les catégories d'actifs ;
-- documenter les affectations.
+- change the default accounts;
+- import the hardware and VM inventory;
+- structure the asset categories;
+- document the assignments.
 
 ## Monitoring
 
-Le monitoring actif est la VM legacy `101 monitoring`.
+The active monitoring is the legacy VM `101 monitoring`.
 
-| Service | État |
+| Service | State |
 |---|---|
-| SSH | Validé |
-| Grafana `3000` | Validé |
-| Prometheus `9090` | Validé |
-| InfluxDB `8086` | Validé |
+| SSH | Validated |
+| Grafana `3000` | Validated |
+| Prometheus `9090` | Validated |
+| InfluxDB `8086` | Validated |
 
-Décision : le doublon `1300 vm-monitoring` a été supprimé.
+Decision: the `1300 vm-monitoring` duplicate was removed.
 
-## Haute disponibilité
+## High availability
 
-Un test d'extinction de `pve03` a été réalisé.
+A shutdown test of `pve03` was carried out.
 
 ```mermaid
 sequenceDiagram
@@ -866,85 +870,85 @@ sequenceDiagram
     participant P1 as pve01
     participant P2 as pve02
 
-    User->>P3: Extinction volontaire
-    P3-->>HA: Perte heartbeat
-    HA->>HA: Quorum maintenu avec pve01 + pve02
-    HA->>P2: Relance VM 106
-    HA->>P1: Relance VM 1301/1302 après correction snippets
+    User->>P3: Voluntary shutdown
+    P3-->>HA: Heartbeat lost
+    HA->>HA: Quorum kept with pve01 + pve02
+    HA->>P2: Restart VM 106
+    HA->>P1: Restart VM 1301/1302 after snippets fix
 ```
 
-Résultat :
+Result:
 
-- quorum conservé ;
-- HA fonctionnelle ;
-- incident identifié sur snippets cloud-init stockés en local ;
-- script de synchronisation créé ;
-- `pve03` réintégré ;
-- iSCSI corrigé et validé ;
-- doublon `1300` retiré.
+- quorum kept;
+- HA working;
+- incident identified on locally stored cloud-init snippets;
+- synchronization script created;
+- `pve03` reintegrated;
+- iSCSI fixed and validated;
+- `1300` duplicate removed.
 
-Un rapport détaillé local a été conservé dans l'espace de travail projet.
+A detailed local report was kept in the project workspace.
 
-## Sécurité
+## Security
 
-Réalisé :
+Done:
 
-- durcissement SSH ;
-- accès root par mot de passe désactivé ;
-- compte nommé `bkh@pve` créé ;
-- token API d'automatisation créé ;
-- baseline OPNsense préparée ;
-- firewall datacenter Proxmox préparé ;
-- runbook TOTP rédigé ;
-- secrets et states Terraform exclus du dépôt Git.
+- SSH hardening;
+- root password access disabled;
+- named account `bkh@pve` created;
+- automation API token created;
+- OPNsense baseline prepared;
+- Proxmox datacenter firewall prepared;
+- TOTP runbook written;
+- secrets and Terraform states excluded from the Git repository.
 
-Reste à faire :
+Still to do:
 
-- activer TOTP sur `bkh@pve` ;
-- valider la politique firewall Proxmox en mode `DROP` avec accès de secours ;
-- confirmer le rôle final du VLAN40 ;
-- appliquer progressivement la baseline OPNsense.
+- enable TOTP on `bkh@pve`;
+- validate the Proxmox firewall policy in `DROP` mode with emergency access;
+- confirm the final role of VLAN40;
+- progressively apply the OPNsense baseline.
 
-## Sécurité offensive contrôlée
+## Controlled offensive security
 
-Cette partie ajoute une dimension **offensive / purple team** au projet, mais uniquement dans un cadre autorisé, documenté et non destructif. L'objectif n'est pas de "casser" l'infrastructure : l'objectif est de vérifier l'exposition réelle, améliorer la segmentation, alimenter GLPI, tester les détections et produire des preuves techniques propres.
+This part adds an **offensive / purple team** dimension to the project, but only within an authorized, documented and non-destructive framework. The goal is not to "break" the infrastructure: the goal is to check the real exposure, improve segmentation, feed GLPI, test detections and produce clean technical evidence.
 
-### Objectifs
+### Objectives
 
-| Objectif | Résultat attendu |
+| Objective | Expected result |
 |---|---|
-| Cartographier l'exposition | Liste des hôtes, ports et services réellement visibles |
-| Valider la segmentation | Vérifier quels flux passent entre VLANs/zones |
-| Identifier les faiblesses | Services inutiles, versions obsolètes, ports ouverts |
-| Tester les détections | Générer des événements visibles côté logs/monitoring |
-| Alimenter GLPI | Transformer les découvertes en inventaire/action |
-| Produire un rapport | Risques, preuves, recommandations, priorités |
+| Map the exposure | List of the hosts, ports and services actually visible |
+| Validate segmentation | Check which flows pass between VLANs/zones |
+| Identify weaknesses | Unnecessary services, outdated versions, open ports |
+| Test detections | Generate events visible in logs/monitoring |
+| Feed GLPI | Turn the findings into inventory/actions |
+| Produce a report | Risks, evidence, recommendations, priorities |
 
-### Règles d'engagement
+### Rules of engagement
 
-| Règle | Décision |
+| Rule | Decision |
 |---|---|
-| Périmètre | Réseaux et VMs explicitement autorisés du lab Showroom HP |
-| Hors périmètre | Internet, clients réels, données utilisateurs, équipements non validés |
-| Intensité | Scans légers, pas de déni de service |
-| Exploitation | Uniquement validation contrôlée après accord humain |
-| Identifiants | Pas de brute force, pas de password spraying |
-| Malware | Interdit |
-| Persistance | Interdite |
-| Exfiltration | Interdite |
-| Traçabilité | Chaque test doit avoir date, cible, outil, résultat, impact |
-| Arrêt d'urgence | Stop immédiat si latence, panne, alerte ou impact métier |
+| Scope | Networks and VMs of the Showroom HP lab that are explicitly authorized |
+| Out of scope | Internet, real customers, user data, unvalidated equipment |
+| Intensity | Light scans, no denial of service |
+| Exploitation | Controlled validation only, after human approval |
+| Credentials | No brute force, no password spraying |
+| Malware | Forbidden |
+| Persistence | Forbidden |
+| Exfiltration | Forbidden |
+| Traceability | Each test must have a date, target, tool, result and impact |
+| Emergency stop | Stop immediately on latency, outage, alert or business impact |
 
-### Périmètre de test recommandé
+### Recommended test scope
 
 ```mermaid
 flowchart LR
-    Kali[Poste audit autorisé] --> VLAN40[VLAN40 / zone test]
+    Kali[Authorized audit workstation] --> VLAN40[VLAN40 / test zone]
     VLAN40 --> PVE[Proxmox management]
     VLAN40 --> GLPI[GLPI 192.168.3.111]
     VLAN40 --> MON[Monitoring 192.168.3.101]
-    VLAN40 --> LEGACY[VMs legacy 100-106]
-    VLAN40 --> TARGETS[VMs cibles restantes]
+    VLAN40 --> LEGACY[Legacy VMs 100-106]
+    VLAN40 --> TARGETS[Remaining target VMs]
 
     style Kali fill:#24292f,color:#fff
     style VLAN40 fill:#1f6feb,color:#fff
@@ -953,45 +957,45 @@ flowchart LR
     style MON fill:#8250df,color:#fff
 ```
 
-### Méthodologie offensive
+### Offensive methodology
 
 ```mermaid
 flowchart TB
-    SCOPE[Cadrage et autorisation] --> DISC[Découverte passive/active légère]
-    DISC --> ENUM[Énumération services]
-    ENUM --> ANALYZE[Analyse des risques]
-    ANALYZE --> VALID[Validation contrôlée]
-    VALID --> DETECT[Contrôle logs et monitoring]
-    DETECT --> FIX[Corrections sécurité]
+    SCOPE[Scoping and authorization] --> DISC[Light passive/active discovery]
+    DISC --> ENUM[Service enumeration]
+    ENUM --> ANALYZE[Risk analysis]
+    ANALYZE --> VALID[Controlled validation]
+    VALID --> DETECT[Log and monitoring check]
+    DETECT --> FIX[Security fixes]
     FIX --> RETEST[Re-test]
-    RETEST --> REPORT[Rapport final]
+    RETEST --> REPORT[Final report]
 ```
 
-### Phases de test
+### Test phases
 
-| Phase | Description | Livrable |
+| Phase | Description | Deliverable |
 |---|---|---|
-| 1. Cadrage | Valider le périmètre, les horaires et les exclusions | Fiche d'autorisation |
-| 2. Découverte | Identifier les hôtes actifs | Liste des assets |
-| 3. Énumération | Identifier ports, services, versions | Matrice services |
-| 4. Analyse | Classer les risques par criticité | Backlog sécurité |
-| 5. Validation | Confirmer sans impact destructif | Preuves contrôlées |
-| 6. Détection | Vérifier les traces dans logs/monitoring | Captures/logs |
-| 7. Correction | Fermer ports, patcher, filtrer, documenter | Plan d'action |
-| 8. Re-test | Confirmer la réduction d'exposition | Rapport comparatif |
+| 1. Scoping | Validate the scope, the schedule and the exclusions | Authorization sheet |
+| 2. Discovery | Identify the active hosts | Asset list |
+| 3. Enumeration | Identify ports, services, versions | Services matrix |
+| 4. Analysis | Rank the risks by criticality | Security backlog |
+| 5. Validation | Confirm without destructive impact | Controlled evidence |
+| 6. Detection | Check the traces in logs/monitoring | Screenshots/logs |
+| 7. Fixing | Close ports, patch, filter, document | Action plan |
+| 8. Re-test | Confirm the reduction in exposure | Comparison report |
 
-### Commandes de reconnaissance non destructives
+### Non-destructive reconnaissance commands
 
-Toutes les commandes ci-dessous doivent être exécutées uniquement depuis un poste d'audit autorisé et contre le périmètre validé.
+All the commands below must be run only from an authorized audit workstation and against the validated scope.
 
-Découverte réseau légère :
+Light network discovery:
 
 ```bash
 mkdir -p reports/offensive
 nmap -sn 192.168.3.0/24 -oA reports/offensive/discovery-192-168-3
 ```
 
-Scan TCP raisonné sur les services courants :
+Reasoned TCP scan of the common services:
 
 ```bash
 nmap -sT -sV --top-ports 100 --reason \
@@ -999,7 +1003,7 @@ nmap -sT -sV --top-ports 100 --reason \
   -oA reports/offensive/top100-services-192-168-3
 ```
 
-Scan ciblé d'une VM connue :
+Targeted scan of a known VM:
 
 ```bash
 nmap -sV -sC -p 22,80,443,3000,8006,8086,9090 \
@@ -1007,7 +1011,7 @@ nmap -sV -sC -p 22,80,443,3000,8006,8086,9090 \
   -oA reports/offensive/key-services
 ```
 
-Contrôle HTTP basique :
+Basic HTTP check:
 
 ```bash
 curl -I http://192.168.3.111
@@ -1015,7 +1019,7 @@ curl -I http://192.168.3.101:3000
 curl -k -I https://192.168.3.5:8006
 ```
 
-Vérification TLS non intrusive :
+Non-intrusive TLS check:
 
 ```bash
 nmap --script ssl-enum-ciphers -p 443,8006 \
@@ -1023,15 +1027,15 @@ nmap --script ssl-enum-ciphers -p 443,8006 \
   -oA reports/offensive/tls-proxmox
 ```
 
-Inventaire ports à importer dans GLPI :
+Port inventory to import into GLPI:
 
 ```bash
 nmap -sV --open -oX reports/offensive/services.xml 192.168.3.0/24
 ```
 
-### Tests de segmentation
+### Segmentation tests
 
-Objectif : vérifier qu'un poste d'audit ne peut atteindre que les services nécessaires.
+Goal: verify that an audit workstation can reach only the necessary services.
 
 ```bash
 nc -zvw3 192.168.3.5 8006
@@ -1040,179 +1044,179 @@ nc -zvw3 192.168.3.111 80
 nc -zvw3 192.168.3.4 3260
 ```
 
-Résultat attendu :
+Expected result:
 
-| Flux | Décision attendue |
+| Flow | Expected decision |
 |---|---|
-| Admin vers Proxmox `8006` | Autorisé depuis poste admin |
-| Admin vers SSH Proxmox `22` | Autorisé depuis poste admin |
-| Monitoring vers Proxmox exporters | Autorisé si nécessaire |
-| VLAN invité vers Proxmox | Bloqué |
-| VLAN invité vers TrueNAS iSCSI | Bloqué |
-| VLAN démo vers GLPI HTTP | Selon besoin |
+| Admin to Proxmox `8006` | Allowed from the admin workstation |
+| Admin to Proxmox SSH `22` | Allowed from the admin workstation |
+| Monitoring to Proxmox exporters | Allowed if needed |
+| Guest VLAN to Proxmox | Blocked |
+| Guest VLAN to TrueNAS iSCSI | Blocked |
+| Demo VLAN to GLPI HTTP | As needed |
 
-### Scénarios purple team
+### Purple team scenarios
 
-| Scénario | Action contrôlée | Détection attendue |
+| Scenario | Controlled action | Expected detection |
 |---|---|---|
-| Scan réseau léger | `nmap -sn` | Logs firewall ou absence assumée |
-| Connexion Proxmox refusée | Tentative HTTPS depuis VLAN non autorisé | Blocage OPNsense/Proxmox |
-| Découverte GLPI | Requête HTTP simple | Logs Nginx |
-| Port interdit | `nc` vers iSCSI depuis mauvaise zone | Drop firewall |
-| Service exposé inutilement | Scan top ports | Ticket de correction |
+| Light network scan | `nmap -sn` | Firewall logs or accepted absence |
+| Proxmox connection refused | HTTPS attempt from an unauthorized VLAN | OPNsense/Proxmox block |
+| GLPI discovery | Simple HTTP request | Nginx logs |
+| Forbidden port | `nc` to iSCSI from the wrong zone | Firewall drop |
+| Needlessly exposed service | Top-ports scan | Fix ticket |
 
-### Grille de criticité
+### Criticality grid
 
-| Niveau | Exemple | Action |
+| Level | Example | Action |
 |---|---|---|
-| Critique | Accès management depuis VLAN invité | Bloquer immédiatement |
-| Élevé | Service admin exposé sans restriction | Restreindre par ACL/firewall |
-| Moyen | Version obsolète ou bannière trop détaillée | Planifier patch/hardening |
-| Faible | Service attendu mais non documenté | Documenter dans GLPI |
-| Info | Hôte découvert conforme | Ajouter à l'inventaire |
+| Critical | Management access from the guest VLAN | Block immediately |
+| High | Admin service exposed without restriction | Restrict by ACL/firewall |
+| Medium | Outdated version or overly detailed banner | Plan patch/hardening |
+| Low | Expected but undocumented service | Document in GLPI |
+| Info | Compliant discovered host | Add to the inventory |
 
-### Rapport attendu
+### Expected report
 
-Le rapport offensif doit contenir :
+The offensive report must contain:
 
-- date et fenêtre de test ;
-- périmètre validé ;
-- outils utilisés ;
-- commandes exécutées ;
-- hôtes découverts ;
-- ports exposés ;
-- écarts de segmentation ;
-- captures ou extraits de logs ;
-- risques classés ;
-- recommandations ;
-- re-test après correction.
+- date and test window;
+- validated scope;
+- tools used;
+- commands executed;
+- discovered hosts;
+- exposed ports;
+- segmentation gaps;
+- screenshots or log extracts;
+- ranked risks;
+- recommendations;
+- re-test after fixing.
 
-### Limites volontaires
+### Deliberate limits
 
-Cette documentation ne fournit pas :
+This documentation does not provide:
 
-- d'exploitation de vulnérabilité publique ;
-- de payload ;
-- de contournement d'authentification ;
-- de persistance ;
-- de mouvement latéral ;
-- d'exfiltration ;
-- de brute force.
+- public vulnerability exploitation;
+- payloads;
+- authentication bypass;
+- persistence;
+- lateral movement;
+- exfiltration;
+- brute force.
 
-Ces limites gardent le projet exploitable comme lab professionnel et défendable dans un contexte client ou portfolio.
+These limits keep the project usable as a professional lab, defensible in a client or portfolio context.
 
-### Campagne réalisée — 2026-06-24
+### Campaign carried out — 2026-06-24
 
-Une première campagne non destructive a été exécutée sur les actifs connus du lab.
+A first non-destructive campaign was run against the known assets of the lab.
 
-Commandes réalisées :
+Commands performed:
 
-- scan ciblé des actifs Proxmox, TrueNAS, VMs legacy, GLPI et Ansible ;
-- scan ciblé des ports management ;
-- contrôle HTTP des services exposés ;
-- tests de flux TCP avec `nc` ;
-- contrôle TLS léger sur TrueNAS/Proxmox ;
-- prévalidation des chemins requis avant durcissement firewall.
+- targeted scan of the Proxmox, TrueNAS, legacy VM, GLPI and Ansible assets;
+- targeted scan of the management ports;
+- HTTP check of the exposed services;
+- TCP flow tests with `nc`;
+- light TLS check on TrueNAS/Proxmox;
+- pre-validation of the required paths before firewall hardening.
 
-Constats principaux :
+Main findings:
 
-| Sujet | Constat | Priorité |
+| Topic | Finding | Priority |
 |---|---|---|
-| TrueNAS | SSH, HTTP(S), SMB, NFS, iSCSI et rpcbind visibles depuis le poste admin | P1/P2 selon VLAN |
-| Proxmox | `22`, `8006`, `3128`, `111` visibles ; `9100` visible sur `pve01` | P1/P2 |
-| Monitoring | Grafana, Prometheus et InfluxDB accessibles | P2 |
-| GLPI | GLPI accessible en HTTP uniquement | P2 |
-| Inventaire | `192.168.3.100` et `192.168.3.102` à réconcilier avec l'inventaire réel | P2 |
+| TrueNAS | SSH, HTTP(S), SMB, NFS, iSCSI and rpcbind visible from the admin workstation | P1/P2 depending on VLAN |
+| Proxmox | `22`, `8006`, `3128`, `111` visible; `9100` visible on `pve01` | P1/P2 |
+| Monitoring | Grafana, Prometheus and InfluxDB reachable | P2 |
+| GLPI | GLPI reachable over HTTP only | P2 |
+| Inventory | `192.168.3.100` and `192.168.3.102` to reconcile with the real inventory | P2 |
 
-Actions recommandées après campagne :
+Recommended actions after the campaign:
 
-1. Restreindre Proxmox `22/8006` aux IPs admin.
-2. Restreindre TrueNAS iSCSI/NFS aux seuls nœuds Proxmox.
-3. Restreindre Prometheus/InfluxDB hors VLAN admin/monitoring.
-4. Ajouter HTTPS à GLPI.
-5. Réconcilier les hôtes découverts dans GLPI.
-6. Rejouer le scan après application de la baseline OPNsense.
+1. Restrict Proxmox `22/8006` to the admin IPs.
+2. Restrict TrueNAS iSCSI/NFS to the Proxmox nodes only.
+3. Restrict Prometheus/InfluxDB outside the admin/monitoring VLAN.
+4. Add HTTPS to GLPI.
+5. Reconcile the discovered hosts in GLPI.
+6. Replay the scan after applying the OPNsense baseline.
 
-Le rapport détaillé et les fichiers Nmap sont conservés localement dans `reports/offensive/` et ne sont pas publiés dans le dépôt GitHub.
+The detailed report and the Nmap files are kept locally in `reports/offensive/` and are not published in the GitHub repository.
 
-## OPNsense et réseau
+## OPNsense and network
 
-Artefacts locaux préparés :
+Local artifacts prepared:
 
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `opnsense/aliases.csv` | Alias réseau |
-| `opnsense/baseline-rules.csv` | Baseline de règles |
-| `docs/operations/opnsense-vlan-baseline.md` | Guide d'application |
-| `docs/operations/vlan40-decision.md` | Décision VLAN40 |
+| `opnsense/aliases.csv` | Network aliases |
+| `opnsense/baseline-rules.csv` | Rule baseline |
+| `docs/operations/opnsense-vlan-baseline.md` | Application guide |
+| `docs/operations/vlan40-decision.md` | VLAN40 decision |
 
-Décision restante : choisir l'intention du VLAN40 entre `corporate`, `guest` ou `demo showroom`.
+Remaining decision: choose the intent of VLAN40 between `corporate`, `guest` or `demo showroom`.
 
-## Synthèse des livrables réalisés
+## Summary of delivered items
 
-| Livrable | État |
+| Deliverable | State |
 |---|---|
-| Cluster Proxmox trois nœuds | Réalisé |
-| Stockage TrueNAS iSCSI/LVM | Réalisé |
-| Stockage TrueNAS NFS ISO | Réalisé |
-| VMs legacy importées/protégées | Réalisé |
-| Catalogue Terraform | Réalisé |
-| Nettoyage des doublons | Réalisé |
-| VM GLPI installée | Réalisé |
-| VM Ansible préparée | Réalisé |
-| Monitoring legacy validé | Réalisé |
-| Test HA `pve03` | Réalisé |
-| Runbooks sécurité | Préparés |
-| Campagne sécurité offensive contrôlée | Réalisée |
-| Baseline OPNsense | Préparée |
-| Documentation finale README | Réalisée |
+| Three-node Proxmox cluster | Done |
+| TrueNAS iSCSI/LVM storage | Done |
+| TrueNAS NFS ISO storage | Done |
+| Legacy VMs imported/protected | Done |
+| Terraform catalog | Done |
+| Duplicate cleanup | Done |
+| GLPI VM installed | Done |
+| Ansible VM prepared | Done |
+| Legacy monitoring validated | Done |
+| `pve03` HA test | Done |
+| Security runbooks | Prepared |
+| Controlled offensive security campaign | Done |
+| OPNsense baseline | Prepared |
+| Final README documentation | Done |
 
-## Arborescence utile
+## Useful tree
 
 ```text
 .
-├── ansible/                 # Inventaire et playbooks
-├── docs/                    # Runbooks opérationnels détaillés
-├── inventory/               # Inventaires nettoyés et trackers
-├── opnsense/                # Baseline firewall
-├── reports/                 # Rapports de tests
-├── scripts/                 # Scripts de validation/synchronisation
-├── templates/               # Modèles CSV et rapports
-├── terraform/               # Infrastructure as Code Proxmox
-└── README.md                # Documentation finale
+├── ansible/                 # Inventory and playbooks
+├── docs/                    # Detailed operational runbooks
+├── inventory/               # Cleaned inventories and trackers
+├── opnsense/                # Firewall baseline
+├── reports/                 # Test reports
+├── scripts/                 # Validation/synchronization scripts
+├── templates/               # CSV and report templates
+├── terraform/               # Proxmox Infrastructure as Code
+└── README.md                # Final documentation
 ```
 
-## Fichiers volontairement non publiés
+## Files deliberately not published
 
-Ces fichiers sont ignorés ou supprimés localement avant push :
+These files are ignored or deleted locally before the push:
 
-- ISO Proxmox ;
-- fichiers Excel source ;
-- `.venv/` ;
-- `.terraform/` ;
-- `terraform.tfvars` ;
-- `terraform.tfstate*` ;
-- `*.tfplan` ;
-- inventaires bruts pouvant contenir des données sensibles.
+- Proxmox ISO;
+- source Excel files;
+- `.venv/`;
+- `.terraform/`;
+- `terraform.tfvars`;
+- `terraform.tfstate*`;
+- `*.tfplan`;
+- raw inventories that may contain sensitive data.
 
-## Publication GitHub
+## GitHub publication
 
-Le dépôt GitHub privé ne publie volontairement que :
+The GitHub repository deliberately publishes only:
 
-- `README.md` : documentation finale visible en page d'accueil ;
-- `.gitignore` : garde-fou pour éviter la publication accidentelle de fichiers locaux sensibles.
+- `README.md`: final documentation shown on the home page;
+- `.gitignore`: safeguard against the accidental publication of sensitive local files.
 
-Les fichiers Terraform, Ansible, inventaires, rapports bruts et scripts restent dans l'espace de travail local.
+The Terraform files, Ansible files, inventories, raw reports and scripts stay in the local workspace.
 
-## Commandes d'exploitation locales
+## Local operation commands
 
-Synchroniser les snippets cloud-init utiles :
+Synchronize the useful cloud-init snippets:
 
 ```bash
 ./scripts/proxmox-sync-cloud-init-snippets.sh
 ```
 
-Vérifier Terraform :
+Check Terraform:
 
 ```bash
 cd terraform
@@ -1221,7 +1225,7 @@ terraform validate
 terraform plan -refresh=false
 ```
 
-Tester Ansible :
+Test Ansible:
 
 ```bash
 cd ansible
@@ -1229,21 +1233,21 @@ ansible linux -m ping
 ansible-playbook playbooks/glpi-foundation.yml --syntax-check
 ```
 
-Prévalidation firewall Proxmox :
+Proxmox firewall pre-validation:
 
 ```bash
 ./scripts/validation/proxmox-pre-drop-check.sh
 ```
 
-## Prochaines étapes
+## Next steps
 
-1. Configurer TOTP pour `bkh@pve`.
-2. Changer les comptes par défaut GLPI.
-3. Importer l'inventaire dans GLPI.
-4. Installer les OS des VMs restantes.
-5. Valider le rôle final du VLAN40.
-6. Exécuter une première campagne de découverte offensive non destructive.
-7. Appliquer la baseline OPNsense par étapes.
-8. Rejouer un test HA propre.
-9. Tester une restauration backup Proxmox.
-10. Passer le firewall Proxmox en `DROP` après validation complète.
+1. Configure TOTP for `bkh@pve`.
+2. Change the GLPI default accounts.
+3. Import the inventory into GLPI.
+4. Install the OS on the remaining VMs.
+5. Validate the final role of VLAN40.
+6. Run a first non-destructive offensive discovery campaign.
+7. Apply the OPNsense baseline step by step.
+8. Replay a clean HA test.
+9. Test a Proxmox backup restore.
+10. Switch the Proxmox firewall to `DROP` after full validation.
